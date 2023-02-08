@@ -53,7 +53,7 @@ export const createDeveloper = async (
     "email" = $1;
       `;
 
-    const queryConfig: QueryConfig = {
+    let queryConfig: QueryConfig = {
       text: queryString,
       values: [validateBody.email],
     };
@@ -62,7 +62,7 @@ export const createDeveloper = async (
       queryConfig
     );
 
-    if (Number(queryResult.rows[0].count)> 0) {
+    if (Number(queryResult.rows[0].count) > 0) {
       return response.status(409).json({
         message: "Email already exists.!",
       });
@@ -83,6 +83,34 @@ export const createDeveloper = async (
     queryResult = await client.query(queryString);
 
     const newDeveloper: iNewDeveloperResponse = queryResult.rows[0];
+
+    queryString = `
+    INSERT INTO 
+      developer_infos("developerSince", "preferredOS")
+    VALUES
+      (NULL, NULL )
+    RETURNING *;  
+    `;
+    const queryResultInfos: QueryResult<iDeveloperInfosResponse> =
+      await client.query(queryString);
+    console.log(queryResultInfos.rows[0].id);
+
+    queryString = `
+    UPDATE
+        developers
+    SET
+        "developerInfoId" = $1
+    WHERE
+        id = $2
+    RETURNING *;
+`;
+
+    queryConfig = {
+      text: queryString,
+      values: [queryResultInfos.rows[0].id, newDeveloper.id],
+    };
+
+    await client.query(queryConfig);
 
     return response.status(201).json(newDeveloper);
   } catch (error) {
