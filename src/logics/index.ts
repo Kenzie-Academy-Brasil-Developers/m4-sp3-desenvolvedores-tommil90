@@ -201,36 +201,27 @@ export const listDeveloperByID = async (
   request: Request,
   response: Response
 ): Promise<Response> => {
-  try {
-    const developerId: number = parseInt(request.params.id);
+  const developerId: number = parseInt(request.params.id);
 
-    const queryString: string = `
-      SELECT
-          d.*,
-          di."developerSince",
-          di."preferredOS"
-      FROM 
-          developers d
-      JOIN
-          developer_infos di ON d."developerInfoId" = di."id"
-      WHERE 
-          d."id" = $1;
-          `;
+  const queryString: string = `
+    SELECT
+        d.*,
+        di."developerSince",
+        di."preferredOS"
+    FROM 
+        developers d
+    JOIN
+        developer_infos di ON d."developerInfoId" = di."id"
+    WHERE 
+        d."id" = $1;
+        `;
 
-    const queryConfig: QueryConfig = {
-      text: queryString,
-      values: [developerId],
-    };
+  const queryConfig: QueryConfig = {
+    text: queryString,
+    values: [developerId],
+  };
 
-    const queryResult: QueryResult<tListById> = await client.query(queryConfig);
+  const queryResult: QueryResult<tListById> = await client.query(queryConfig);
 
-    return response.status(201).json(queryResult.rows[0]);
-  } catch (error) {
-    if (error instanceof Error) {
-      return response.status(400).json({ message: error.message });
-    }
-
-    console.log(error);
-    return response.status(500).json({ message: error });
-  }
+  return response.status(201).json(queryResult.rows[0]);
 };
