@@ -30,8 +30,10 @@ export interface iProject extends iProjectResponse {
     technologyName: string;
 }
 
-export interface iProjectsTechnologies {
+export interface iProjectsTecnologies {
     id: number;
+    addedIn: Date;
     projectId: number;
     tecnologyId: number | null
 }
+

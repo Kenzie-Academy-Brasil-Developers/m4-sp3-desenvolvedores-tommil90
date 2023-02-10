@@ -17,10 +17,12 @@ export interface iNewDeveloperResponse extends iNewDeveloperRequest {
 export interface iDeveloperInfosRequest {
     developerSince: Date| null;
     preferredOS: 'Windows' | 'Linux' | 'MacOS' | null;
+
 }
 
 export interface iDeveloperInfosResponse extends iDeveloperInfosRequest{
     id: number
+    developerId: number;
 }
 
 export type tListById = iNewDeveloperResponse & Omit<iDeveloperInfosResponse, 'id'>

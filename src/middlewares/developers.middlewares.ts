@@ -36,19 +36,3 @@ export const developerExists = async (
   });
 };
 
-export const emailDeveloperExists = async (
-  request: Request,
-  response: Response,
-  next: NextFunction
-): Promise<Response | void> => {
-  const id = request.params.id;
-
-  let queryString: string = `
-    SELECT
-    COUNT(*)
-      FROM
-    developers
-      WHERE 
-    "email" = $1;
-      `;
-};

@@ -174,35 +174,65 @@ export const createDeveloper = async (
 
     const newDeveloper: iNewDeveloperResponse = queryResult.rows[0];
 
-    queryString = `
-    INSERT INTO 
-      developer_infos("developerSince", "preferredOS")
-    VALUES
-      (NULL, NULL )
-    RETURNING *;  
-    `;
-    const queryResultInfos: QueryResult<iDeveloperInfosResponse> =
-      await client.query(queryString);
- 
+    return response.status(201).json(newDeveloper);
+  } catch (error) {
+    if (error instanceof Error) {
+      return response.status(400).json({ message: error.message });
+    }
 
-    queryString = `
+    console.log(error);
+    return response.status(500).json({ message: error });
+  }
+};
+
+export const createDeveloperInfo = async (
+  request: Request,
+  response: Response
+): Promise<Response> => {
+  try {
+    const developerId: number = parseInt(request.params.id);
+    const infosDeveloper: iDeveloperInfosRequest = validateInfos(request.body);
+
+    let queryString: string = `
+    INSERT INTO 
+      developer_infos("developerSince", "preferredOS", "developerId")
+    VALUES
+      ($1, $2, $3 )
+    RETURNING *;  
+  `;
+
+    let queryConfig: QueryConfig = {
+      text: queryString,
+      values: [
+        infosDeveloper.developerSince,
+        infosDeveloper.preferredOS,
+        developerId,
+      ],
+    };
+
+    const queryResult: QueryResult<iDeveloperInfosResponse> =
+      await client.query(queryConfig);
+    const idInfo = queryResult.rows[0].id
+
+    queryString =`
     UPDATE
-        developers
+      developers
     SET
-        "developerInfoId" = $1
+      "developerInfoId" = $1
     WHERE
-        id = $2
+      id = $2
     RETURNING *;
-`;
+  `
 
     queryConfig = {
       text: queryString,
-      values: [queryResultInfos.rows[0].id, newDeveloper.id],
+      values: [idInfo, developerId],
     };
 
     await client.query(queryConfig);
 
-    return response.status(201).json(newDeveloper);
+ 
+    return response.status(201).json(queryResult.rows[0]);
   } catch (error) {
     if (error instanceof Error) {
       return response.status(400).json({ message: error.message });
@@ -219,12 +249,9 @@ export const updateDeveloperInfo = async (
 ): Promise<Response> => {
   try {
     const developerId: number = parseInt(request.params.id);
-    let infosDeveloper: Partial<iDeveloperInfosRequest> = validateInfos(
+    let infosDeveloper: Partial<iDeveloperInfosRequest> = validateInfosUpdate(
       request.body
     );
-    if (request.method === "PATCH") {
-      infosDeveloper = validateInfosUpdate(request.body);
-    }
 
     let queryString: string = `
     
@@ -243,7 +270,7 @@ export const updateDeveloperInfo = async (
 
     const queryResultGetIdInfo: QueryResult<iNewDeveloperResponse> =
       await client.query(queryConfig);
-    const idInfo = queryResultGetIdInfo.rows[0].developerInfoId;
+    const developerInfoId = queryResultGetIdInfo.rows[0].developerInfoId;
 
     queryString = format(
       `
@@ -260,17 +287,14 @@ export const updateDeveloperInfo = async (
 
     queryConfig = {
       text: queryString,
-      values: [idInfo],
+      values: [developerInfoId],
     };
 
     const queryResultUpdateInfo: QueryResult<iDeveloperInfosResponse> =
       await client.query(queryConfig);
 
-    if (request.method === "PATCH") {
-      return response.status(200).json(queryResultUpdateInfo.rows[0]);
-    }
 
-    return response.status(201).json(queryResultUpdateInfo.rows[0]);
+    return response.status(200).json(queryResultUpdateInfo.rows[0]);
   } catch (error) {
     if (error instanceof Error) {
       return response.status(400).json({ message: error.message });
@@ -292,8 +316,10 @@ export const listDevelopers = async (
       di."preferredOS"
   FROM 
       developers d
-  JOIN
-      developer_infos di ON d."developerInfoId" = di."id";
+  LEFT JOIN
+      developer_infos di 
+  ON
+      d."developerInfoId" = di."id";
       `;
 
   const queryResult: QueryResult<tListById> = await client.query(queryString);
@@ -314,7 +340,7 @@ export const listDeveloperByID = async (
         di."preferredOS"
     FROM 
         developers d
-    JOIN
+    LEFT JOIN
         developer_infos di ON d."developerInfoId" = di."id"
     WHERE 
         d."id" = $1;
@@ -435,7 +461,9 @@ export const projectsListByDeveloper = async (
     values: [developerId],
   };
 
-  const queryResult: QueryResult<tProjectListbyDeveloper> = await client.query(queryConfig);
+  const queryResult: QueryResult<tProjectListbyDeveloper> = await client.query(
+    queryConfig
+  );
 
   return response.status(201).json(queryResult.rows);
 };
