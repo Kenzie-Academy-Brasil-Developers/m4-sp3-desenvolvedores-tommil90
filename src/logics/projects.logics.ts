@@ -46,7 +46,7 @@ export const createProject = async (
   //   values: [date.toLocaleDateString(), queryResult.rows[0].id],
   // };
   // await client.query(queryConfig);
-
+    console.log(queryResult)
   return response.status(201).json(queryResult.rows[0]);
 };
 
@@ -59,7 +59,7 @@ export const projectsList = async (
     p."id", p."name", p.description, p."estimatedTime", p.repository, p."startDate", p."endDate", p."developerId", t."id" AS "technologyID", t."name" AS "technologyName" 
   FROM 
     projects_technologies pt 
-  LEFT JOIN
+  FULL JOIN
     projects p  
   ON
     p.id = pt."projectId"
@@ -83,15 +83,17 @@ export const projectListbyId = async (
   SELECT
     p."id", p."name", p.description, p."estimatedTime", p.repository, p."startDate", p."endDate", p."developerId", t."id" AS "technologyID", t."name" AS "technologyName" 
   FROM 
-    projects_technologies pt
+    projects_technologies pt 
   LEFT JOIN
     technologies t 
   ON
-    pt."tecnologyId" = t.id    
-  LEFT JOIN
+    pt."tecnologyId" = t.id
+  FULL JOIN
     projects p  
   ON
-    p.id = $1;
+    p.id = pt."projectId"
+  WHERE
+  	p.id = $1;
       `;
 
   const queryConfig: QueryConfig = {
