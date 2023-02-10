@@ -1,4 +1,7 @@
+import { iProject } from "./projects.interfaces";
+
 export type tNewDeveloperRequiredKeys = 'name' | 'email';
+export type tDeveloperInfosRequiredKeys = 'developerSince' | 'preferredOS';
 
 export interface iNewDeveloperRequest {
     name: string;
@@ -12,8 +15,8 @@ export interface iNewDeveloperResponse extends iNewDeveloperRequest {
 }
 
 export interface iDeveloperInfosRequest {
-    infoDeveloperSince: Date;
-    preferredOS: 'Windows' | 'Linux' | 'MacOS';
+    developerSince: Date| null;
+    preferredOS: 'Windows' | 'Linux' | 'MacOS' | null;
 }
 
 export interface iDeveloperInfosResponse extends iDeveloperInfosRequest{
@@ -21,3 +24,6 @@ export interface iDeveloperInfosResponse extends iDeveloperInfosRequest{
 }
 
 export type tListById = iNewDeveloperResponse & Omit<iDeveloperInfosResponse, 'id'>
+
+export type tProjectListbyDeveloper = tListById &  iProject
+
