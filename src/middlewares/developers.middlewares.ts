@@ -8,7 +8,7 @@ export const developerExists = async (
   response: Response,
   next: NextFunction
 ): Promise<Response | void> => {
-  const id: number = +request.params.id;
+  const id: number = Number(request.params.id);
 
   const queryString: string = `
         SELECT
